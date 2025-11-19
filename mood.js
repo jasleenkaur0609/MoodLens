@@ -1,175 +1,162 @@
-//-------------------------------------------
-// MoodLens – Enhanced Mood Detection with Full Music List
-//-------------------------------------------
-
 // DOM Elements
 const video = document.getElementById("camera");
 const emotionLabel = document.getElementById("emotionLabel");
 const musicSuggest = document.getElementById("musicSuggest");
 const moodDescription = document.getElementById("moodDescription");
+const noteInput = document.getElementById("noteInput");
+const saveMoodBtn = document.getElementById("saveMoodBtn");
+const saveSuccess = document.getElementById("saveSuccess");
 
 // --------------------
-// Camera Start
+// Start Camera
 // --------------------
 async function startCamera() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "user" },
-            audio: false
-        });
-
-        video.srcObject = stream;
-        await video.play();
-
-        console.log("📸 Camera started");
-    } catch (error) {
-        console.error("Camera error:", error);
-        emotionLabel.textContent = "Camera access blocked!";
-    }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+    video.srcObject = stream;
+    await video.play();
+    console.log("📸 Camera started");
+  } catch (error) {
+    console.error("Camera error:", error);
+    emotionLabel.textContent = "Camera access blocked!";
+  }
 }
 
 // --------------------
-// Load Face-api Models
+// Load Face API Models
 // --------------------
 async function loadModels() {
-    if (typeof faceapi === "undefined") {
-        console.error("❌ face-api.js not loaded!");
-        emotionLabel.textContent = "FaceAPI not loaded!";
-        return;
-    }
-
-    try {
-        console.log("📦 Loading models...");
-        await Promise.all([
-            faceapi.nets.tinyFaceDetector.loadFromUri("/models"),
-            faceapi.nets.faceExpressionNet.loadFromUri("/models")
-        ]);
-
-        console.log("🤖 Face models loaded!");
-        startDetection();
-    } catch (err) {
-        console.error("Model load error:", err);
-        emotionLabel.textContent = "Model loading failed!";
-    }
+  if (typeof faceapi === "undefined") {
+    console.error("❌ face-api.js not loaded!");
+    emotionLabel.textContent = "FaceAPI not loaded!";
+    return;
+  }
+  try {
+    console.log("📦 Loading face-api models...");
+    await Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri("/models"),
+      faceapi.nets.faceExpressionNet.loadFromUri("/models")
+    ]);
+    console.log("🤖 Models loaded!");
+    startDetection();
+  } catch (err) {
+    console.error("Model load error:", err);
+    emotionLabel.textContent = "Model loading failed!";
+  }
 }
 
 // --------------------
-// Detection Loop (once per minute)
+// Detection Loop
 // --------------------
 let lastMood = null;
 function startDetection() {
-    updateMood(); // initial call
-    setInterval(updateMood, 30000); // update every 1 minute
+  updateMood();
+  setInterval(updateMood, 10000);
 }
 
 async function updateMood() {
-    if (video.paused || video.ended) return;
+  if (video.paused || video.ended) return;
 
-    const detection = await faceapi
-        .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
-        .withFaceExpressions();
+  const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+                                 .withFaceExpressions();
 
-    if (!detection) {
-        emotionLabel.textContent = "No face detected…";
-        musicSuggest.innerHTML = "";
-        moodDescription.innerHTML = "";
-        lastMood = null;
-        return;
-    }
+  if (!detection) {
+    emotionLabel.textContent = "No face detected…";
+    musicSuggest.innerHTML = "";
+    moodDescription.innerHTML = "";
+    lastMood = null;
+    return;
+  }
 
-    const expressions = detection.expressions;
-    const mood = Object.keys(expressions).reduce((a, b) =>
-        expressions[a] > expressions[b] ? a : b
-    );
+  const expressions = detection.expressions;
+  const mood = Object.keys(expressions).reduce((a,b) => expressions[a] > expressions[b] ? a : b);
 
-    // Only update UI if mood changed
-    if (mood !== lastMood) {
-        lastMood = mood;
-        console.log("Detected mood:", mood);
-
-        emotionLabel.textContent = mood.toUpperCase();
-        updateMusic(mood);
-        updateDescription(mood);
-    }
+  if (mood !== lastMood) {
+    lastMood = mood;
+    emotionLabel.textContent = mood.toUpperCase();
+    updateBackground(mood);
+    updateMusic(mood);
+    updateDescription(mood);
+  }
 }
 
 // --------------------
-// Music Suggestions (Show all)
+// Background color per mood
+// --------------------
+function updateBackground(mood) {
+  const colors = {
+    happy:'#3a352b',
+  sad:'#2b3a4a',
+  angry:'#4a2b2b',
+  surprised:'#4a2b4a',
+  neutral:'#3a3a3a'
+  };
+  document.body.style.background = colors[mood] || "#05060d";
+}
+
+// --------------------
+// Music suggestions
 // --------------------
 function updateMusic(mood) {
-    const music = {
-        happy: [
-            "💛 'Good Life' – OneRepublic",
-            "💛 'Happy' – Pharrell Williams",
-            "💛 'Uptown Funk' – Bruno Mars",
-            "💛 'Can't Stop the Feeling!' – Justin Timberlake",
-            "💛 'Shake It Off' – Taylor Swift"
-        ],
-        sad: [
-            "💙 'Fix You' – Coldplay",
-            "💙 'Someone Like You' – Adele",
-            "💙 'Stay With Me' – Sam Smith",
-            "💙 'Let Her Go' – Passenger",
-            "💙 'The Night We Met' – Lord Huron"
-        ],
-        angry: [
-            "❤️‍🔥 'Believer' – Imagine Dragons",
-            "❤️‍🔥 'Break Stuff' – Limp Bizkit",
-            "❤️‍🔥 'Killing in the Name' – Rage Against the Machine",
-            "❤️‍🔥 'Smells Like Teen Spirit' – Nirvana",
-            "❤️‍🔥 'Bodies' – Drowning Pool"
-        ],
-        surprised: [
-            "💜 'Adventure of a Lifetime' – Coldplay",
-            "💜 'Wake Me Up' – Avicii",
-            "💜 'Don't Stop Me Now' – Queen",
-            "💜 'Titanium' – David Guetta ft. Sia",
-            "💜 'Good Time' – Owl City & Carly Rae Jepsen"
-        ],
-        fearful: [
-            "🌫️ 'Stay' – Rihanna",
-            "🌫️ 'Creep' – Radiohead",
-            "🌫️ 'Breathe Me' – Sia",
-            "🌫️ 'Behind Blue Eyes' – Limp Bizkit",
-            "🌫️ 'Mad World' – Gary Jules"
-        ],
-        disgusted: [
-            "🟣 'Lovely' – Billie Eilish",
-            "🟣 'Everybody Wants to Rule the World' – Tears for Fears",
-            "🟣 'Disturbia' – Rihanna",
-            "🟣 'Toxic' – Britney Spears",
-            "🟣 'Bad Guy' – Billie Eilish"
-        ],
-        neutral: [
-            "☁️ Calm Lo-fi Beats",
-            "☁️ Chillhop Essentials",
-            "☁️ Ambient Study Music",
-            "☁️ Relaxing Piano Tunes",
-            "☁️ Nature Sounds Mix"
-        ]
-    };
-
-    const songs = music[mood] || ["Detecting…"];
-    // show all songs as list
-    musicSuggest.innerHTML = songs.map(song => `• ${song}`).join("<br>");
+  const music = {
+    happy: ["💛 Good Life – OneRepublic","💛 Happy – Pharrell Williams","💛 Good as Hell – Lizzo","💛 Walking on Sunshine – Katrina & The Waves","💛 On Top of the World – Imagine Dragons","💛 Firework – Katy Perry"],
+    sad: ["💙 Fix You – Coldplay","💙 All I Want – Kodaline","💙 When the Party's Over – Billie Eilish","💙 Jealous – Labrinth","💙 Before You Go – Lewis Capaldi","💙 Easy on Me – Adele"],
+    angry: ["🔥 Believer – Imagine Dragons","🔥 Stronger – Kanye West","🔥 Warriors – Imagine Dragons","🔥 Till I Collapse – Eminem","🔥 Radioactive – Imagine Dragons","🔥 Lose Yourself – Eminem"],
+    surprised: ["💜 Adventure of a Lifetime – Coldplay","💜 Wake Me Up – Avicii","💜 Good Time – Owl City & Carly Rae Jepsen","💜 Titanium – David Guetta ft Sia","💜 Rather Be – Clean Bandit","💜 Pompeii – Bastille"],
+    fearful: ["🌫️ Breathe Me – Sia","🌫️ The Night We Met – Lord Huron","🌫️ Lovely – Billie Eilish","🌫️ Skinny Love – Birdy","🌫️ Say Something – A Great Big World","🌫️ All I Want – Olivia Rodrigo (cover)"],
+    disgusted: ["🟣 Everybody Wants to Rule the World – Tears for Fears","🟣 Bad Guy – Billie Eilish","🟣 Toxic – Britney Spears","🟣 Disturbia – Rihanna","🟣 Royals – Lorde","🟣 Numb – Linkin Park"],
+    neutral: ["☁️ Lofi Chill Beats","☁️ Peaceful Piano","☁️ Relaxing Study Music","☁️ Soft Ambient Mix","☁️ Stress Relief Nature Sounds","☁️ Deep Focus Playlist"]
+  };
+  musicSuggest.innerHTML = music[mood].map(s => `• ${s}`).join("<br>");
 }
 
 // --------------------
-// Mood Description with emojis
+// Mood descriptions
 // --------------------
 function updateDescription(mood) {
-    const desc = {
-        happy: "😊 You're feeling joyful and energetic! Spread positivity around you. Perfect time for creativity, socializing, or dancing to your favorite tunes. Enjoy the bright moments!",
-        sad: "😢 Feeling a bit down? It's okay to slow down. Take care of yourself, reflect, and do activities that soothe you like journaling, meditating, or listening to calm music.",
-        angry: "😡 Anger detected! Step back, breathe deeply, and release tension. Engage in physical activity or listen to energetic music to vent frustration safely.",
-        surprised: "😮 Wow! Something unexpected happened? Stay curious, embrace the excitement, and explore new opportunities or ideas that come your way.",
-        fearful: "😨 Feeling worried or anxious? Slow down, ground yourself, and use calming practices like deep breathing, meditation, or speaking to someone you trust.",
-        disgusted: "🤢 Something is off or unpleasant? Recognize your feelings, distance from negativity, and focus on things that bring you comfort and joy.",
-        neutral: "😐 Calm and steady. Your mind is balanced. Ideal moment to plan, reflect, and focus on your daily activities mindfully."
-    };
-
-    moodDescription.innerHTML = desc[mood] || "Understanding…";
+  const desc = {
+    happy: "😊 You seem to be full of light and warmth! Happiness opens creativity, boosts confidence, and improves your ability to connect with others. Enjoy the bright energy!",
+    sad: "😢 Your emotions feel heavy. Sadness is natural — hydrate, sit somewhere calm, or do a comforting activity. Feelings pass, you are not alone.",
+    angry: "😡 Strong energy inside — anger signals something feels unfair. Take slow breaths, walk, or put on empowering music to release tension safely.",
+    surprised: "😮 Something unexpected caught your attention. Your mind is alert and curious. Explore a new idea or try something fun.",
+    fearful: "😨 You might feel anxious or uncertain. Ground yourself by breathing slowly, listening to calm music, or talking to someone comforting.",
+    disgusted: "🤢 Something feels off. Distance yourself from negativity, focus on uplifting music or activities to cleanse your mood.",
+    neutral: "😐 Your emotional state is balanced and steady. Perfect for focusing on tasks, planning, and being productive."
+  };
+  moodDescription.innerHTML = desc[mood] || "Processing…";
 }
+
+// --------------------
+// Save Mood to Firestore
+// --------------------
+saveMoodBtn.addEventListener("click", async () => {
+  if (!lastMood) {
+    alert("No mood detected yet!");
+    return;
+  }
+
+  const user = auth.currentUser;
+  if (!user) {
+    alert("Please login first!");
+    return;
+  }
+
+  const note = noteInput.value.trim();
+  try {
+    await db.collection("mood").add({
+      userID: user.uid,
+      mood: lastMood,
+      note: note,
+      date: new Date().toISOString()
+    });
+    saveSuccess.style.display = "block";
+    noteInput.value = "";
+    setTimeout(() => saveSuccess.style.display = "none", 3000);
+  } catch (err) {
+    console.error("Error saving mood:", err);
+    alert("Failed to save mood!");
+  }
+});
 
 // --------------------
 // Initialize

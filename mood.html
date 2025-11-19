@@ -17,6 +17,7 @@ body {
   background: linear-gradient(135deg, #0b0c1a, #05060d);
   color: #fff;
   overflow-x: hidden;
+  transition: background 1s ease;
 }
 
 /* ===== FLOATING EMOJIS ===== */
@@ -27,7 +28,6 @@ body {
   pointer-events: none;
   opacity: 0.8;
 }
-
 @keyframes float {
   0% { transform: translateY(0) rotate(0deg); }
   50% { transform: translateY(-60px) rotate(180deg);}
@@ -87,12 +87,10 @@ body {
   box-shadow: 0 0 40px rgba(72,0,255,0.3), 0 0 60px rgba(0,200,255,0.2) inset;
   transition: all 0.4s ease;
 }
-
 .camera-box:hover {
   transform: scale(1.03);
   box-shadow: 0 0 80px rgba(72,0,255,0.4), 0 0 100px rgba(0,200,255,0.3) inset;
 }
-
 #camera {
   width: 100%;
   height: 100%;
@@ -109,7 +107,6 @@ body {
   color: #ffdd59;
   animation: pulse 1.5s infinite;
 }
-
 @keyframes pulse {
   0%,100% {opacity:0.6; transform:scale(1);}
   50% {opacity:1; transform:scale(1.05);}
@@ -120,7 +117,6 @@ body {
   text-align: center;
   margin-top: 20px;
 }
-
 #emotionLabel {
   font-size: 2.6rem;
   font-weight: 700;
@@ -128,7 +124,6 @@ body {
   text-shadow: 0 0 20px rgba(255,117,181,0.7), 0 0 30px rgba(255,213,0,0.4);
   animation: glow 2s infinite alternate;
 }
-
 @keyframes glow {
   0% { text-shadow: 0 0 10px rgba(255,117,181,0.5);}
   100% { text-shadow: 0 0 25px rgba(255,117,181,1);}
@@ -167,13 +162,11 @@ body {
   box-shadow: 0 0 20px rgba(255,255,255,0.05);
   transition: all 0.3s ease;
 }
-
 .suggestion-box:hover,
 .mood-info:hover {
   transform: translateY(-5px) scale(1.02);
   box-shadow: 0 0 40px rgba(255,117,181,0.4);
 }
-
 #musicSuggest, #moodDescription {
   font-size: 1rem;
   opacity: 0.95;
@@ -187,7 +180,6 @@ body {
   gap: 12px;
   margin-top: 20px;
 }
-
 .btn {
   padding: 14px;
   font-size: 1rem;
@@ -200,12 +192,10 @@ body {
   position: relative;
   overflow: hidden;
 }
-
 .btn:hover {
   transform: translateY(-3px);
   box-shadow: 0 0 25px rgba(255,117,181,0.5);
 }
-
 .btn::after {
   content:'';
   position: absolute;
@@ -217,7 +207,6 @@ body {
   transform: rotate(45deg);
   transition: all 0.5s ease;
 }
-
 .btn:hover::after {
   top: -10%;
   left: -10%;
@@ -275,6 +264,14 @@ body {
       <p id="moodDescription">Your emotional insights will appear here...</p>
     </div>
 
+    <div class="mood-info">
+      <h3>📝 Add a Note</h3>
+      <textarea id="noteInput" placeholder="Write something about how you feel..."
+        style="width:100%; height:80px; margin-top:10px; padding:10px; border-radius:12px; border:none; outline:none;"></textarea>
+      <button class="btn" style="margin-top:12px;" id="saveMoodBtn">💾 Save Mood</button>
+      <p id="saveSuccess" style="display:none; margin-top:10px; color:#00ffb3;">✔ Mood Saved Successfully</p>
+    </div>
+
     <div class="buttons">
       <button class="btn history-btn" onclick="window.location.href='Mood_Dashboard.html'">📈 View Mood History</button>
       <button class="btn home-btn" onclick="window.location.href='index.html'">🏠 Back to Home</button>
@@ -282,7 +279,40 @@ body {
   </div>
 </div>
 
+<!-- ===== FIREBASE & FACE API SCRIPTS ===== -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
+
+<!-- Initialize Firebase & global auth/db -->
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAao3A5qY2CfJfSpjJq3VK8pXVgP0HAFCo",
+  authDomain: "moodlens-188a5.firebaseapp.com",
+  projectId: "moodlens-188a5",
+  storageBucket: "moodlens-188a5.firebasestorage.app",
+  messagingSenderId: "175504126348",
+  appId: "1:175504126348:web:af68e5600665ff99c5a6a9",
+  measurementId: "G-7H1HRGEM9T"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+</script>
+
+<!-- Redirect if not logged in -->
+<script>
+window.addEventListener("DOMContentLoaded", () => {
+  auth.onAuthStateChanged(user => {
+    if (!user) {
+      window.location.href = "login.html";
+    }
+  });
+});
+</script>
+
+<!-- Load mood.js -->
 <script defer src="mood.js"></script>
 </body>
 </html>

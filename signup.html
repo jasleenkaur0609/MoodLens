@@ -3,229 +3,135 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MoodLens1 – Sign Up</title>
+  <title>MoodLens – Sign Up</title>
 
-  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
     /* RESET */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-body {
-  font-family: "Poppins", sans-serif;
-  overflow-x: hidden;
-  background: #050505;
-  color: #fff;
-}
+    body {
+      font-family: "Poppins", sans-serif;
+      background: #050505;
+      color: #fff;
+    }
 
-/* Animated BG */
-.animated-bg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(130deg, #2c1040, #0f0533, #3d1133);
-  background-size: 350% 350%;
-  filter: blur(140px);
-  opacity: 0.45;
-  animation: moveBg 18s infinite ease-in-out;
-  z-index: -1;
-}
+    .animated-bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: linear-gradient(130deg, #2c1040, #0f0533, #3d1133);
+      background-size: 350% 350%;
+      filter: blur(140px);
+      opacity: 0.45;
+      animation: moveBg 18s infinite ease-in-out;
+      z-index: -1;
+    }
 
-@keyframes moveBg {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
+    @keyframes moveBg {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
 
-/* NAVBAR */
-.navbar {
-  width: 100%;
-  padding: 25px 10%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  position: fixed;
-  top: 0;
-  z-index: 20;
-  backdrop-filter: blur(10px);
-  background: rgba(0, 0, 0, 0.4);
-}
+    .navbar {
+      width: 100%;
+      padding: 25px 10%;
+      display: flex;
+      justify-content: space-between;
+      position: fixed;
+      top: 0; z-index: 20;
+      backdrop-filter: blur(10px);
+      background: rgba(0, 0, 0, 0.4);
+    }
 
-.logo {
-  font-size: 28px;
-  font-weight: 700;
-}
-.logo span {
-  color: #c85bff;
-}
+    .logo { font-size: 28px; font-weight: 700; }
+    .logo span { color: #c85bff; }
 
-.nav-links a {
-  color: #bbb;
-  text-decoration: none;
-  margin-left: 25px;
-  font-size: 16px;
-  transition: 0.3s;
-}
-.nav-links a:hover,
-.nav-links a.active {
-  color: #c85bff;
-}
+    .nav-links a {
+      color: #bbb;
+      margin-left: 25px;
+      text-decoration: none;
+      transition: 0.3s;
+    }
+    .nav-links a.active,
+    .nav-links a:hover {
+      color: #c85bff;
+    }
 
-/* SIGNUP WRAPPER */
-.signup-wrapper {
-  width: 100%;
-  padding-top: 160px;
-  padding-bottom: 80px;
-  display: flex;
-  justify-content: center;
-}
+    .signup-wrapper {
+      width: 100%;
+      padding-top: 160px;
+      padding-bottom: 80px;
+      display: flex;
+      justify-content: center;
+    }
 
-/* SIGNUP CARD */
-.signup-card {
-  width: 450px;
-  padding: 45px 38px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 22px;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 0 30px rgba(200, 91, 255, 0.12);
-  animation: fadeIn 1.2s ease;
-}
+    .signup-card {
+      width: 450px;
+      padding: 45px 38px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 22px;
+      backdrop-filter: blur(12px);
+    }
 
-@keyframes fadeIn {
-  0% { opacity: 0; transform: translateY(30px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
+    .title { font-size: 32px; font-weight: 600; }
+    .subtitle { margin-top: 10px; color: #aaa; }
 
-.title {
-  font-size: 32px;
-  font-weight: 600;
-}
+    .form { margin-top: 30px; }
+    .input-box { margin-bottom: 22px; }
 
-.subtitle {
-  margin-top: 10px;
-  color: #aaa;
-  font-size: 15px;
-}
+    .input-box label { margin-bottom: 8px; display: block; color: #ccc; }
+    .input-box input {
+      width: 100%;
+      padding: 13px 15px;
+      border-radius: 12px;
+      border: none;
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+    }
 
-/* FORM */
-.form {
-  margin-top: 30px;
-}
+    .main-btn {
+      width: 100%;
+      padding: 15px;
+      font-size: 17px;
+      font-weight: 600;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(90deg, #c85bff, #602aff);
+      color: #fff;
+      margin-top: 10px;
+    }
 
-.input-box {
-  margin-bottom: 22px;
-}
+    .form-foot { text-align: center; margin-top: 18px; color: #ccc; }
+    .form-foot a { color: #d787ff; }
 
-.input-box label {
-  font-weight: 500;
-  margin-bottom: 8px;
-  display: block;
-  color: #ccc;
-}
+    .divider { text-align: center; margin: 30px 0; color: #999; position: relative; }
+    .divider span { background: rgba(0,0,0,0.6); padding: 0 10px; }
 
-.input-box input {
-  width: 100%;
-  padding: 13px 15px;
-  border-radius: 12px;
-  border: none;
-  outline: none;
-  background: rgba(255,255,255,0.12);
-  color: #fff;
-  font-size: 15px;
-}
-
-/* Button */
-.main-btn {
-  width: 100%;
-  padding: 15px;
-  font-size: 17px;
-  font-weight: 600;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  color: #fff;
-  background: linear-gradient(90deg, #c85bff, #602aff);
-  box-shadow: 0 0 18px rgba(200,91,255,0.35);
-  transition: 0.3s ease;
-}
-.main-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 0 28px rgba(200,91,255,0.6);
-}
-
-/* Footer text */
-.form-foot {
-  text-align: center;
-  margin-top: 18px;
-  color: #ccc;
-}
-.form-foot a {
-  color: #d787ff;
-  font-weight: 600;
-}
-
-/* Divider */
-.divider {
-  text-align: center;
-  margin: 30px 0;
-  color: #999;
-  font-size: 14px;
-  position: relative;
-}
-.divider span {
-  background: rgba(0,0,0,0.6);
-  padding: 0 10px;
-  border-radius: 5px;
-}
-.divider::before {
-  content: "";
-  width: 100%;
-  height: 1px;
-  background: rgba(255,255,255,0.15);
-  position: absolute;
-  top: 50%;
-  left: 0;
-}
-
-/* Google Button */
-.google-btn {
-  width: 100%;
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.15);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  background: rgba(255,255,255,0.08);
-  cursor: pointer;
-  transition: 0.3s;
-  color: #fff;
-}
-.google-btn img {
-  width: 20px;
-}
-.google-btn:hover {
-  transform: translateY(-3px);
-}
-
+    .google-btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      cursor: pointer;
+      color: #fff;
+    }
   </style>
 </head>
 
 <body>
 
-<!-- Background Glow -->
 <div class="animated-bg"></div>
 
-<!-- NAVBAR -->
 <header class="navbar">
   <div class="logo">MoodLens</div>
   <nav class="nav-links">
@@ -235,55 +141,56 @@ body {
   </nav>
 </header>
 
-<!-- SIGNUP SECTION -->
 <section class="signup-wrapper">
-
   <div class="signup-card">
 
     <h1 class="title">Create Your Account</h1>
     <p class="subtitle">Start your emotional wellness journey with us</p>
 
-    <form class="form">
+    <form id="signupForm" class="form">
 
       <div class="input-box">
         <label>Full Name</label>
-        <input type="text" placeholder="Enter your full name" required>
+        <input id="fullName" type="text" placeholder="Enter your full name" required>
       </div>
 
       <div class="input-box">
         <label>Email Address</label>
-        <input type="email" placeholder="Enter your email" required>
+        <input id="signupEmail" type="email" placeholder="Enter your email" required>
       </div>
 
       <div class="input-box">
         <label>Create Password</label>
-        <input type="password" placeholder="Create a strong password" required>
+        <input id="signupPassword" type="password" placeholder="Create a strong password" required>
       </div>
 
       <div class="input-box">
         <label>Confirm Password</label>
-        <input type="password" placeholder="Re-enter your password" required>
+        <input id="confirmPassword" type="password" placeholder="Re-enter your password" required>
       </div>
 
-      <button class="main-btn">Create Account</button>
+      <button id="signupBtn" class="main-btn" type="submit">Create Account</button>
 
       <p class="form-foot">
-        Already have an account?
-        <a href="login.html">Login</a>
+        Already have an account? <a href="login.html">Login</a>
       </p>
 
     </form>
 
     <div class="divider"><span>OR</span></div>
 
-    <button class="google-btn">
-      <img src="https://www.svgrepo.com/show/475656/google-color.svg">
+    <button id="googleSignup" class="google-btn">
+      <img src="https://www.svgrepo.com/show/475656/google-color.svg" width="20">
       Sign up with Google
     </button>
 
   </div>
-
 </section>
+
+<!-- Firebase + Signup Logic -->
+<script type="module" src="firebase-config.js"></script>
+<script type="module" src="auth.js"></script>
+
 
 </body>
 </html>
