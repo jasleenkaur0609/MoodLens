@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MoodLens – Mood History Dashboard</title>
+<title>MoodLens Insights</title>
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -12,8 +12,145 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+<!-- jsPDF & FileSaver for Export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins', sans-serif; }
+body { background: linear-gradient(135deg,#12131a,#1a1b23); color:#fff; transition:0.5s; }
+
+/* HEADER */
+.dashboard-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  padding: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  margin-bottom: 10px;
+}
+.dashboard-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg,#f0c674,#b28fff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-align: center;
+}
+.dashboard-header button {
+  position: absolute;
+  left: 20px;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 8px;
+  background: #b28fff;
+  color: #fff;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.dashboard-header button:hover { background: #f0c674; color: #000; }
+
+/* Header Controls */
+.header-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px 20px 20px;
+  flex-wrap: wrap;
+}
+.filters { display: flex; gap: 12px; flex-wrap: wrap; }
+.filters select, .filters input { padding:8px 12px; border-radius:8px; border:none; outline:none; font-size:0.95rem; background: rgba(255,255,255,0.1); color:#fff; }
+.filters select option, .filters input { color:#000; background:#fff; }
+.export-buttons { display: flex; gap: 12px; }
+.export-buttons button { padding:8px 15px; border:none; border-radius:8px; background:#b28fff; color:#fff; cursor:pointer; transition:0.3s; }
+.export-buttons button:hover { background:#f0c674; color:#000; }
+
+/* Container */
+.container { display:flex; gap:30px; padding:0 20px 20px 20px; flex-wrap: wrap; }
+.left-panel, .right-panel { flex:1; display:flex; flex-direction:column; gap:20px; }
+@media(max-width:1024px){ .container { flex-direction:column; } }
+
+/* Cards */
+.cards-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:15px; }
+.card { padding:18px 15px; border-radius:15px; background: linear-gradient(135deg,#b28fff,#f0c674); text-align:center; font-weight:600; transition:0.3s; cursor:pointer; font-size:1rem; }
+.card:hover { transform:scale(1.03); box-shadow:0 0 15px rgba(255,255,255,0.2); }
+
+/* Charts */
+.chart-container { padding:15px; border-radius:15px; background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); backdrop-filter: blur(6px); width:100%; }
+#pieChart { max-width:250px !important; margin:auto; }
+
+/* Heatmap & Timeline */
+.heatmap-container { display:flex; flex-direction:column; gap:10px; }
+.heatmap { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+.heatmap div { width:28px; height:28px; border-radius:6px; background:#1c1c28; transition:all 0.3s ease; position:relative; }
+.heatmap div[data-mood="happy"]{ background:#a18e5d; }
+.heatmap div[data-mood="sad"]{ background:#5d7aa2; }
+.heatmap div[data-mood="angry"]{ background:#a25d5d; }
+.heatmap div[data-mood="surprised"]{ background:#8b5da2; }
+.heatmap div[data-mood="neutral"]{ background:#7a7a7a; }
+.heatmap div:hover::after { content: attr(data-note); position:absolute; background: rgba(0,0,0,0.7); padding:4px 6px; border-radius:6px; font-size:0.7rem; top:-28px; left:-8px; max-width:140px; pointer-events:none; }
+
+.timeline { display:flex; flex-direction:column; gap:8px; max-height:300px; overflow-y:auto; }
+.timeline-item { display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:10px; background: rgba(255,255,255,0.05); border-left:4px solid #f0c674; transition:0.3s; font-size:0.9rem; }
+.timeline-item[data-mood="happy"]{ border-left-color:#a18e5d; }
+.timeline-item[data-mood="sad"]{ border-left-color:#5d7aa2; }
+.timeline-item[data-mood="angry"]{ border-left-color:#a25d5d; }
+.timeline-item[data-mood="surprised"]{ border-left-color:#8b5da2; }
+.timeline-item[data-mood="neutral"]{ border-left-color:#7a7a7a; }
+.timeline-item:hover{ transform: scale(1.02); box-shadow:0 0 12px rgba(255,255,255,0.1); }
+</style>
+</head>
+<body>
+
+<div class="dashboard-header">
+  <button onclick="window.location.href='mood.html'">← Go Back</button>
+  <h1>MoodLens Panorama</h1>
+</div>
+
+<div class="header-controls">
+  <div class="filters">
+    <select id="moodFilter">
+      <option value="all">All Moods</option>
+      <option value="happy">Happy</option>
+      <option value="sad">Sad</option>
+      <option value="angry">Angry</option>
+      <option value="surprised">Surprised</option>
+      <option value="neutral">Neutral</option>
+    </select>
+    <input type="date" id="dateFilter"/>
+  </div>
+  <div class="export-buttons">
+    <button id="exportCSV">Export CSV</button>
+    <button id="exportPDF">Export PDF</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="left-panel">
+    <div class="cards-grid" id="cardsGrid">
+      <div class="card" id="totalMoods">Total Moods: 0</div>
+      <div class="card" id="happyDays">Happy Days: 0</div>
+      <div class="card" id="sadDays">Sad Days: 0</div>
+      <div class="card" id="averageMood">Average Mood: N/A</div>
+      <div class="card" id="topMood">Top Mood: N/A</div>
+    </div>
+
+    <div class="chart-container"><canvas id="pieChart"></canvas></div>
+    <div class="chart-container"><canvas id="barChart"></canvas></div>
+  </div>
+
+  <div class="right-panel">
+    <div class="line-chart-container chart-container"><canvas id="lineChart"></canvas></div>
+    <div class="timeline" id="timeline"></div>
+    <div class="heatmap-container">
+      <div class="heatmap" id="heatmap"></div>
+    </div>
+  </div>
+</div>
+
 <script>
-// ===== Firebase Initialization =====
+// ===== Firebase Init =====
 const firebaseConfig = {
   apiKey: "AIzaSyAao3A5qY2CfJfSpjJq3VK8pXVgP0HAFCo",
   authDomain: "moodlens-188a5.firebaseapp.com",
@@ -25,141 +162,48 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-</script>
 
-<style>
-/* ===== GLOBAL RESET ===== */
-* { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins', sans-serif; }
-body { background: linear-gradient(135deg, #12131a, #1a1b23); color:#fff; overflow-x:hidden; transition: background 1s ease; }
-
-/* ===== CONTAINER ===== */
-.container { padding:30px; display:flex; flex-direction:column; gap:25px; }
-
-/* ===== DASHBOARD HEADER ===== */
-.dashboard-header { display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; }
-.dashboard-header h1 { font-size:2.5rem; font-weight:700; background: linear-gradient(135deg, #f0c674, #b28fff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-.filters { display:flex; gap:12px; margin-top:10px; flex-wrap: wrap; }
-.filters select, .filters input { padding:8px 12px; border-radius:8px; border:none; outline:none; font-size:0.95rem; background: rgba(255,255,255,0.1); color:#fff; }
-.filters select option, .filters input { color:#000; background:#fff; }
-
-/* ===== ANALYTICS SECTION ===== */
-.analytics-section { display:grid; grid-template-columns:1fr 1fr; gap:30px; }
-@media(max-width:1024px){ .analytics-section { grid-template-columns:1fr; } }
-
-/* ===== GLASS CARD ===== */
-.analytics-card { padding:20px; border-radius:18px; background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); backdrop-filter: blur(6px); transition: all 0.3s ease; }
-.analytics-card:hover { transform: translateY(-5px) scale(1.02); box-shadow:0 0 15px rgba(255,255,255,0.1); }
-
-/* ===== MOOD RING ===== */
-.mood-ring-container { position: relative; width:250px; height:250px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; transition: transform 0.4s ease; margin:auto; }
-.mood-ring-container span { position:absolute; color:#fff; font-weight:700; text-align:center; }
-
-/* ===== PIE CHART ===== */
-.chart-container { max-width:300px; margin:20px auto; }
-
-/* ===== LINE CHART ===== */
-.line-chart-container { max-width:500px; margin:20px auto; }
-
-/* ===== HEATMAP ===== */
-.heatmap-container { display:flex; flex-direction:column; gap:10px; }
-.heatmap { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
-.heatmap div { width:30px; height:30px; border-radius:6px; background:#1c1c28; transition:all 0.3s ease; position:relative; }
-.heatmap div[data-mood="happy"]{ background:#a18e5d; }
-.heatmap div[data-mood="sad"]{ background:#5d7aa2; }
-.heatmap div[data-mood="angry"]{ background:#a25d5d; }
-.heatmap div[data-mood="surprised"]{ background:#8b5da2; }
-.heatmap div[data-mood="neutral"]{ background:#7a7a7a; }
-.heatmap div:hover::after { content: attr(data-note); position:absolute; background: rgba(0,0,0,0.7); padding:5px 8px; border-radius:6px; font-size:0.75rem; top:-30px; left:-10px; max-width:150px; pointer-events:none; }
-
-/* ===== TIMELINE ===== */
-.timeline { display:flex; flex-direction:column; gap:10px; margin-top:10px; max-height:300px; overflow-y:auto; }
-.timeline-item { display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:12px; background: rgba(255,255,255,0.05); border-left:5px solid #f0c674; transition: all 0.4s ease; }
-.timeline-item[data-mood="happy"]{ border-left-color:#a18e5d; }
-.timeline-item[data-mood="sad"]{ border-left-color:#5d7aa2; }
-.timeline-item[data-mood="angry"]{ border-left-color:#a25d5d; }
-.timeline-item[data-mood="surprised"]{ border-left-color:#8b5da2; }
-.timeline-item[data-mood="neutral"]{ border-left-color:#7a7a7a; }
-.timeline-item:hover{ transform: scale(1.02); box-shadow:0 0 15px rgba(255,255,255,0.1); }
-
-/* ===== DOMINANT MOOD CARD ===== */
-.dominant-mood { margin:20px 0; padding:15px; background: rgba(255,255,255,0.05); border-radius:12px; text-align:center; font-size:1.2rem; }
-</style>
-</head>
-<body>
-
-<div class="container">
-  <div class="dashboard-header">
-    <h1>Mood History Dashboard</h1>
-    <div class="filters">
-      <select id="moodFilter">
-        <option value="all">All Moods</option>
-        <option value="happy">Happy</option>
-        <option value="sad">Sad</option>
-        <option value="angry">Angry</option>
-        <option value="surprised">Surprised</option>
-        <option value="neutral">Neutral</option>
-      </select>
-      <input type="date" id="dateFilter"/>
-    </div>
-  </div>
-
-  <!-- Dominant Mood Card -->
-  <div class="dominant-mood" id="dominantMood">Loading dominant mood...</div>
-
-  <div class="analytics-section">
-    <div>
-      <div class="mood-ring-container"><span>Mood Ring</span></div>
-      <div class="analytics-card chart-container">
-        <canvas id="pieChart"></canvas>
-      </div>
-      <div class="analytics-card line-chart-container">
-        <canvas id="lineChart"></canvas>
-      </div>
-    </div>
-
-    <div class="analytics-cards">
-      <div class="analytics-card heatmap-container">
-        <div class="heatmap" id="heatmap"></div>
-      </div>
-      <div class="analytics-card">
-        <div class="timeline" id="timeline"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-// ===== GLOBAL VARIABLES =====
+// ===== Variables =====
 let moodHistory = [];
 const timelineEl = document.getElementById('timeline');
 const heatmapEl = document.getElementById('heatmap');
 const moodFilter = document.getElementById('moodFilter');
 const dateFilter = document.getElementById('dateFilter');
-const dominantMoodEl = document.getElementById('dominantMood');
+const cards = {
+  total: document.getElementById('totalMoods'),
+  happy: document.getElementById('happyDays'),
+  sad: document.getElementById('sadDays'),
+  average: document.getElementById('averageMood'),
+  top: document.getElementById('topMood')
+};
+
 const ctxPie = document.getElementById('pieChart').getContext('2d');
 const ctxLine = document.getElementById('lineChart').getContext('2d');
+const ctxBar = document.getElementById('barChart').getContext('2d');
 
-// ===== CHARTS =====
+// ===== Charts =====
 const pieChart = new Chart(ctxPie,{
   type:'doughnut',
-  data:{ labels:['Happy','Sad','Angry','Surprised','Neutral'], datasets:[{ data:[0,0,0,0,0], backgroundColor:['#a18e5d','#5d7aa2','#a25d5d','#8b5da2','#7a7a7a'], borderWidth:0 }]},
-  options:{ responsive:true, plugins:{legend:{position:'bottom'}}, animation:{animateScale:true, animateRotate:true} }
+  data:{labels:['Happy','Sad','Angry','Surprised','Neutral'],datasets:[{data:[0,0,0,0,0],backgroundColor:['#a18e5d','#5d7aa2','#a25d5d','#8b5da2','#7a7a7a']}]},
+  options:{responsive:true, maintainAspectRatio:false}
 });
-
 const lineChart = new Chart(ctxLine,{
   type:'line',
-  data:{ labels:[], datasets:[{ label:'Mood Trend', data:[], fill:false, borderColor:'#f0c674', tension:0.3 }] },
-  options:{ responsive:true, plugins:{legend:{display:false}} }
+  data:{labels:[],datasets:[{label:'Mood Trend',data:[],fill:false,borderColor:'#f0c674',tension:0.3}]}
+});
+const barChart = new Chart(ctxBar,{
+  type:'bar',
+  data:{labels:['Happy','Sad','Angry','Surprised','Neutral'],datasets:[{label:'Mood Count',data:[0,0,0,0,0],backgroundColor:['#a18e5d','#5d7aa2','#a25d5d','#8b5da2','#7a7a7a']}]}
 });
 
-// ===== RENDER FUNCTIONS =====
+// ===== Render Functions =====
 function renderTimeline(data){
   timelineEl.innerHTML='';
   data.forEach(entry=>{
     const div = document.createElement('div');
     div.className='timeline-item';
     div.dataset.mood = entry.mood;
-    let dateStr = entry.date.toDate ? entry.date.toDate().toISOString().split('T')[0] : entry.date;
+    const dateStr = new Date(entry.date).toISOString().split('T')[0];
     div.innerHTML = `<span>${dateStr}</span> – ${entry.note}`;
     timelineEl.appendChild(div);
   });
@@ -170,10 +214,26 @@ function renderHeatmap(data){
   data.forEach(entry=>{
     const div = document.createElement('div');
     div.dataset.mood = entry.mood;
-    let dateStr = entry.date.toDate ? entry.date.toDate().toISOString().split('T')[0] : entry.date;
+    const dateStr = new Date(entry.date).toISOString().split('T')[0];
     div.dataset.note = `${dateStr}: ${entry.note}`;
     heatmapEl.appendChild(div);
   });
+}
+
+function updateCards(data){
+  cards.total.textContent = `Total Moods: ${data.length}`;
+  cards.happy.textContent = `Happy Days: ${data.filter(d=>d.mood==='happy').length}`;
+  cards.sad.textContent = `Sad Days: ${data.filter(d=>d.mood==='sad').length}`;
+  const mapping = {happy:5, surprised:4, neutral:3, sad:2, angry:1};
+  const avg = data.length>0 ? (data.reduce((a,b)=>a+mapping[b.mood],0)/data.length).toFixed(2) : 'N/A';
+  cards.average.textContent = `Average Mood: ${avg}`;
+
+  if(data.length>0){
+    const counts = {};
+    data.forEach(d=>counts[d.mood] = (counts[d.mood]||0)+1);
+    const topMood = Object.keys(counts).reduce((a,b)=>counts[a]>=counts[b]?a:b);
+    cards.top.textContent = `Top Mood: ${topMood}`;
+  } else { cards.top.textContent = `Top Mood: N/A`; }
 }
 
 function renderPieChart(data){
@@ -181,61 +241,78 @@ function renderPieChart(data){
   data.forEach(d=>counts[d.mood]++);
   pieChart.data.datasets[0].data = [counts.happy, counts.sad, counts.angry, counts.surprised, counts.neutral];
   pieChart.update();
-  // Update dominant mood
-  let dominant = Object.keys(counts).reduce((a,b)=>counts[a]>counts[b]?a:b);
-  dominantMoodEl.textContent = `Dominant Mood: ${dominant.toUpperCase()}`;
 }
 
 function renderLineChart(data){
-  let labels = data.map(d => d.date.toDate ? d.date.toDate().toISOString().split('T')[0] : d.date);
-  let moodValues = data.map(d => {
-    const mapping = {happy:5, surprised:4, neutral:3, sad:2, angry:1};
-    return mapping[d.mood] || 3;
-  });
+  let labels = data.map(d => new Date(d.date).toISOString().split('T')[0]);
+  let values = data.map(d => { const map = {happy:5,surprised:4,neutral:3,sad:2,angry:1}; return map[d.mood]||3; });
   lineChart.data.labels = labels;
-  lineChart.data.datasets[0].data = moodValues;
+  lineChart.data.datasets[0].data = values;
   lineChart.update();
 }
 
-// ===== APPLY FILTERS =====
+function renderBarChart(data){
+  const counts = {happy:0,sad:0,angry:0,surprised:0,neutral:0};
+  data.forEach(d=>counts[d.mood]++);
+  barChart.data.datasets[0].data = [counts.happy, counts.sad, counts.angry, counts.surprised, counts.neutral];
+  barChart.update();
+}
+
+// ===== Apply Filters =====
 function applyFilters(){
   let filtered = [...moodHistory];
   const moodVal = moodFilter.value;
   const dateVal = dateFilter.value;
-
-  if(moodVal !== 'all') filtered = filtered.filter(d=>d.mood===moodVal);
-
-  if(dateVal){
-    filtered = filtered.filter(d=>{
-      let docDate = d.date;
-      if(typeof docDate !== "string") docDate = docDate.toDate ? docDate.toDate() : new Date(docDate);
-      docDate = docDate.toISOString().split('T')[0];
-      return docDate === dateVal;
-    });
-  }
-
+  if(moodVal!=='all') filtered = filtered.filter(d=>d.mood===moodVal);
+  if(dateVal) filtered = filtered.filter(d=>{
+    const docDate = new Date(d.date).toISOString().split('T')[0];
+    return docDate === dateVal;
+  });
   renderTimeline(filtered);
   renderHeatmap(filtered);
   renderPieChart(filtered);
   renderLineChart(filtered);
+  renderBarChart(filtered);
+  updateCards(filtered);
 }
 
-// ===== FETCH DATA FROM FIRESTORE =====
+// ===== Fetch Data =====
 async function fetchData(){
   try{
     const snapshot = await db.collection("mood").orderBy("date","asc").get();
     moodHistory = snapshot.docs.map(doc=>doc.data());
     applyFilters();
-  } catch(err){
-    console.error("Error fetching moods:", err);
-    alert("Could not fetch data from Firestore. Check your Firebase config and rules.");
-  }
+  }catch(err){ console.error(err); alert("Check Firebase config/rules"); }
 }
-
-// ===== INITIALIZE =====
 fetchData();
 
-// ===== EVENT LISTENERS =====
+// ===== Export =====
+document.getElementById('exportCSV').addEventListener('click',()=>{
+  if(!moodHistory.length) return;
+  let csv="Date,Mood,Note\n";
+  moodHistory.forEach(d=>{
+    const dateStr = new Date(d.date).toISOString().split('T')[0];
+    csv+=`${dateStr},${d.mood},"${d.note}"\n`;
+  });
+  const blob = new Blob([csv],{type:"text/csv;charset=utf-8"});
+  saveAs(blob,"mood_history.csv");
+});
+
+document.getElementById('exportPDF').addEventListener('click',()=>{
+  if(!moodHistory.length) return;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.text("Mood History Dashboard",14,20);
+  let y = 30;
+  moodHistory.forEach(d=>{
+    const dateStr = new Date(d.date).toISOString().split('T')[0];
+    doc.text(`${dateStr} - ${d.mood} - ${d.note}`,14,y);
+    y+=10;
+    if(y>280){ doc.addPage(); y=20; }
+  });
+  doc.save("mood_history.pdf");
+});
+
 moodFilter.addEventListener('change', applyFilters);
 dateFilter.addEventListener('change', applyFilters);
 </script>
