@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MoodLens1 – Login</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- CSS -->
+  <style>
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  overflow-x: hidden;
+  background: #060606; /* Darker background */
+  color: #fff;
+}
+
+/* Softer, darker animated background */
+.animated-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(120deg, #351a40, #1a1040, #3d1635);
+  background-size: 400% 400%;
+  filter: blur(140px); /* Softer blur */
+  opacity: 0.4;        /* Dimmer */
+  animation: moveBg 20s infinite ease-in-out;
+  z-index: -1;
+}
+
+@keyframes moveBg {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Navbar */
+.navbar {
+  width: 100%;
+  padding: 25px 10%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.4); /* Darker */
+}
+
+.logo {
+  font-size: 28px;
+  font-weight: 700;
+}
+.logo span { color: #b24cff; }
+
+/* Nav Links */
+.nav-links a {
+  color: #bbb;
+  text-decoration: none;
+  margin-left: 25px;
+  font-size: 16px;
+  transition: 0.3s;
+}
+.nav-links a:hover,
+.nav-links a.active {
+  color: #b24cff;
+}
+
+/* Login Wrapper */
+.login-wrapper {
+  width: 100%;
+  padding-top: 160px;
+  padding-bottom: 80px;
+  display: flex;
+  justify-content: center;
+}
+
+/* Login Card */
+.login-card {
+  width: 420px;
+  padding: 40px 35px;
+  background: rgba(255, 255, 255, 0.06); /* Softer glass */
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.07);
+  box-shadow: 0 0 25px rgba(178, 76, 255, 0.12); /* softer neon */
+  animation: fadeIn 1.2s ease;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(30px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.title {
+  font-size: 30px;
+  font-weight: 600;
+}
+
+.subtitle {
+  margin-top: 8px;
+  color: #aaa;
+  font-size: 14px;
+}
+
+/* Form */
+.form {
+  margin-top: 25px;
+}
+
+.input-box {
+  margin-bottom: 18px;
+}
+
+.input-box label {
+  font-weight: 500;
+  display: block;
+  margin-bottom: 8px;
+  color: #ccc;
+}
+
+.input-box input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  font-size: 15px;
+}
+
+/* Main Button */
+.main-btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 17px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(90deg, #b24cff, #5a2aff);
+  box-shadow: 0 0 15px rgba(178, 76, 255, 0.3);
+  transition: 0.3s;
+}
+.main-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 22px rgba(178, 76, 255, 0.5);
+}
+
+/* Footer text */
+.form-foot {
+  text-align: center;
+  margin-top: 15px;
+}
+.form-foot a {
+  color: #c46fff;
+  font-weight: 600;
+}
+
+/* Divider */
+.divider {
+  text-align: center;
+  margin: 25px 0;
+  color: #999;
+  font-size: 14px;
+  position: relative;
+}
+.divider span {
+  background: rgba(0,0,0,0.6);
+  padding: 0 10px;
+  border-radius: 5px;
+}
+.divider::before {
+  content: "";
+  width: 100%;
+  height: 1px;
+  background: rgba(255,255,255,0.1);
+  position: absolute;
+  top: 50%;
+  left: 0;
+}
+
+/* Google Button */
+.google-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(255,255,255,0.07);
+  color: #fff;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.google-btn img {
+  width: 20px;
+}
+.google-btn:hover {
+  transform: translateY(-3px);
+}
+
+
+  </style>
+
+</head>
+<body>
+
+<!-- Animated Gradient Background -->
+<div class="animated-bg"></div>
+
+<!-- Navigation Bar -->
+<header class="navbar">
+  <div class="logo">MoodLens</div>
+  <nav class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="signup.html">Sign Up</a>
+    <a href="login.html" class="active">Login</a>
+  </nav>
+</header>
+
+<!-- Login Section -->
+<section class="login-wrapper">
+
+  <div class="login-card">
+
+    <h1 class="title">Welcome Back 👋</h1>
+    <p class="subtitle">Your emotional wellness journey continues here</p>
+
+    <form class="form">
+
+      <div class="input-box">
+        <label>Email Address</label>
+        <input type="email" placeholder="Enter your email" required>
+      </div>
+
+      <div class="input-box">
+        <label>Password</label>
+        <input type="password" placeholder="Enter your password" required>
+      </div>
+
+      <button class="main-btn">Login</button>
+
+      <p class="form-foot">
+        Don't have an account?
+        <a href="signup.html">Sign Up</a>
+      </p>
+    </form>
+
+    <div class="divider"><span>OR</span></div>
+
+    <button class="google-btn">
+      <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="">
+      Sign in with Google
+    </button>
+
+  </div>
+
+</section>
+
+</body>
+</html>

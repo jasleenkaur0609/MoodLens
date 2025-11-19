@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoodLens – Interactive Mood Detection</title>
+
+<style>
+/* ===== GLOBAL RESET ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+body {
+  background: linear-gradient(135deg, #0b0c1a, #05060d);
+  color: #fff;
+  overflow-x: hidden;
+}
+
+/* ===== FLOATING EMOJIS ===== */
+.emoji {
+  position: absolute;
+  font-size: 2rem;
+  animation: float 6s ease-in-out infinite;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+@keyframes float {
+  0% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-60px) rotate(180deg);}
+  100% { transform: translateY(0) rotate(360deg);}
+}
+
+/* ===== CONTAINER ===== */
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 30px;
+  padding: 30px;
+}
+
+/* ===== LEFT PANEL ===== */
+.left-panel {
+  flex: 1.5;
+  min-width: 320px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 25px;
+  padding: 25px;
+  border: 1px solid rgba(255,255,255,0.15);
+  backdrop-filter: blur(25px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  animation: fadeIn 1s ease forwards;
+}
+
+.left-panel .title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #ffd86f,#845dff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-align: center;
+  text-shadow: 0 0 10px rgba(255,216,111,0.7);
+}
+
+.left-panel .subtext {
+  font-size: 1rem;
+  opacity: 0.7;
+  margin-top: 6px;
+  text-align: center;
+}
+
+/* CAMERA BOX */
+.camera-box {
+  margin: 20px 0;
+  width: 100%;
+  height: 360px;
+  border-radius: 25px;
+  overflow: hidden;
+  border: 3px solid rgba(255,255,255,0.2);
+  box-shadow: 0 0 40px rgba(72,0,255,0.3), 0 0 60px rgba(0,200,255,0.2) inset;
+  transition: all 0.4s ease;
+}
+
+.camera-box:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 80px rgba(72,0,255,0.4), 0 0 100px rgba(0,200,255,0.3) inset;
+}
+
+#camera {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 25px;
+}
+
+/* DETECTING TEXT */
+.detecting {
+  margin-top: 10px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #ffdd59;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%,100% {opacity:0.6; transform:scale(1);}
+  50% {opacity:1; transform:scale(1.05);}
+}
+
+/* MOOD LABEL */
+.emotion-output {
+  text-align: center;
+  margin-top: 20px;
+}
+
+#emotionLabel {
+  font-size: 2.6rem;
+  font-weight: 700;
+  color: #ff75b5;
+  text-shadow: 0 0 20px rgba(255,117,181,0.7), 0 0 30px rgba(255,213,0,0.4);
+  animation: glow 2s infinite alternate;
+}
+
+@keyframes glow {
+  0% { text-shadow: 0 0 10px rgba(255,117,181,0.5);}
+  100% { text-shadow: 0 0 25px rgba(255,117,181,1);}
+}
+
+/* ===== RIGHT PANEL ===== */
+.right-panel {
+  flex: 1;
+  min-width: 300px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 25px;
+  padding: 25px;
+  border: 1px solid rgba(255,255,255,0.15);
+  backdrop-filter: blur(22px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: slideIn 1s ease forwards;
+}
+
+.right-panel .right-title {
+  font-size: 2rem;
+  background: linear-gradient(135deg, #ffd86f,#ff75b5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 10px rgba(255,216,111,0.7);
+}
+
+/* INFO CARDS */
+.suggestion-box,
+.mood-info {
+  padding: 20px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 0 20px rgba(255,255,255,0.05);
+  transition: all 0.3s ease;
+}
+
+.suggestion-box:hover,
+.mood-info:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 0 40px rgba(255,117,181,0.4);
+}
+
+#musicSuggest, #moodDescription {
+  font-size: 1rem;
+  opacity: 0.95;
+  line-height: 1.6rem;
+}
+
+/* BUTTONS */
+.buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.btn {
+  padding: 14px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 15px;
+  color: #fff;
+  background: linear-gradient(135deg, #ff75b5,#ffd86f);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 25px rgba(255,117,181,0.5);
+}
+
+.btn::after {
+  content:'';
+  position: absolute;
+  width: 300%;
+  height: 300%;
+  top: -100%;
+  left: -100%;
+  background: rgba(255,255,255,0.1);
+  transform: rotate(45deg);
+  transition: all 0.5s ease;
+}
+
+.btn:hover::after {
+  top: -10%;
+  left: -10%;
+}
+
+/* ANIMATIONS */
+@keyframes fadeIn { from {opacity:0; transform:scale(0.95);} to {opacity:1; transform:scale(1);} }
+@keyframes slideIn { from {opacity:0; transform:translateX(30px);} to {opacity:1; transform:translateX(0);} }
+
+/* RESPONSIVE */
+@media(max-width:1024px){
+  .container{flex-direction:column;align-items:center;}
+  .camera-box{height:280px;}
+}
+</style>
+</head>
+<body>
+
+<!-- FLOATING EMOJIS -->
+<div class="emoji" style="top:10%; left:10%;">😊</div>
+<div class="emoji" style="top:25%; left:80%;">😢</div>
+<div class="emoji" style="top:45%; left:50%;">😡</div>
+<div class="emoji" style="top:70%; left:65%;">😮</div>
+<div class="emoji" style="top:85%; left:30%;">😎</div>
+
+<div class="container">
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <h1 class="title">Real-Time Mood Detection</h1>
+    <p class="subtext">AI-Powered Face & Emotion Recognition</p>
+
+    <div class="camera-box">
+      <video id="camera" autoplay muted playsinline></video>
+    </div>
+
+    <p class="detecting">Detecting your mood…</p>
+
+    <div class="emotion-output">
+      <h2>Your Mood:</h2>
+      <p id="emotionLabel">—</p>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <h2 class="right-title">Mood Dashboard Live</h2>
+
+    <div class="suggestion-box">
+      <h3>🎵 Music Suggestion</h3>
+      <p id="musicSuggest">Waiting for your mood...</p>
+    </div>
+
+    <div class="mood-info">
+      <h3>📘 About Your Mood</h3>
+      <p id="moodDescription">Your emotional insights will appear here...</p>
+    </div>
+
+    <div class="buttons">
+      <button class="btn history-btn" onclick="window.location.href='Mood_Dashboard.html'">📈 View Mood History</button>
+      <button class="btn home-btn" onclick="window.location.href='index.html'">🏠 Back to Home</button>
+    </div>
+  </div>
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
+<script defer src="mood.js"></script>
+</body>
+</html>

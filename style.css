@@ -1,0 +1,29 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background: #121212;
+    color: white;
+}
+
+h1 {
+    margin-top: 20px;
+}
+
+.container {
+    margin-top: 20px;
+    position: relative;
+    display: inline-block;
+}
+
+#video {
+    width: 500px;
+    border-radius: 15px;
+    border: 3px solid #4CAF50;
+}
+
+#emotionBox {
+    margin-top: 20px;
+    font-size: 25px;
+    font-weight: bold;
+    color: #4CAF50;
+}

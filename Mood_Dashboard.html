@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoodLens – Mood History Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+/* ===== GLOBAL RESET ===== */
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins', sans-serif; }
+body {
+  background: linear-gradient(135deg, #12131a, #1a1b23);
+  color:#fff;
+  overflow-x:hidden;
+  transition: background 1s ease;
+}
+
+/* ===== CONTAINER ===== */
+.container { padding:30px; display:flex; flex-direction:column; gap:25px; }
+
+/* ===== DASHBOARD HEADER ===== */
+.dashboard-header {
+  display:flex; justify-content:space-between; align-items:center;
+  flex-wrap: wrap;
+}
+.dashboard-header h1 {
+  font-size:2.5rem;
+  background: linear-gradient(135deg, #f0c674, #b28fff);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.filters { display:flex; gap:12px; margin-top:10px; flex-wrap: wrap; }
+.filters select, .filters input {
+  padding:8px 12px;
+  border-radius:8px;
+  border:none;
+  outline:none;
+  font-size:0.95rem;
+  background: rgba(255,255,255,0.1);
+  color:#fff;
+}
+.filters select option, .filters input {
+  color:#000;
+  background:#fff;
+}
+
+/* ===== ANALYTICS SECTION GRID ===== */
+.analytics-section {
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:30px;
+}
+@media(max-width:1024px){
+  .analytics-section { grid-template-columns:1fr; }
+}
+
+/* ===== GLASS CARD ===== */
+.analytics-card {
+  padding:20px;
+  border-radius:18px;
+  background: rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1);
+  backdrop-filter: blur(6px);
+  transition: all 0.3s ease;
+}
+.analytics-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow:0 0 15px rgba(255,255,255,0.1);
+}
+
+/* ===== MOOD RING ===== */
+.mood-ring-container {
+  position: relative;
+  width:250px;
+  height:250px;
+  border-radius:50%;
+  background: conic-gradient(
+    #f0c674 0% 25%,
+    #7aa2ff 25% 40%,
+    #ff7f7f 40% 55%,
+    #b28fff 55% 70%,
+    #999999 70% 100%
+  );
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+  transition: transform 0.4s ease;
+  margin:auto;
+}
+.mood-ring-container span { position:absolute; color:#fff; font-weight:700; text-align:center; }
+.mood-ring-container:hover { transform: scale(1.05); }
+
+/* ===== PIE/DOUGHNUT CHART ===== */
+.chart-container { max-width:300px; margin:20px auto; }
+
+/* ===== HEATMAP ===== */
+.heatmap-container { display:flex; flex-direction:column; gap:10px; }
+.weekdays { display:grid; grid-template-columns:repeat(7,1fr); text-align:center; font-size:0.75rem; color:#ccc; }
+.heatmap { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+.heatmap div {
+  width:30px; height:30px; border-radius:6px;
+  background:#1c1c28; transition:all 0.3s ease; position:relative;
+}
+.heatmap div[data-mood="happy"]{ background:#a18e5d; }
+.heatmap div[data-mood="sad"]{ background:#5d7aa2; }
+.heatmap div[data-mood="angry"]{ background:#a25d5d; }
+.heatmap div[data-mood="surprised"]{ background:#8b5da2; }
+.heatmap div[data-mood="neutral"]{ background:#7a7a7a; }
+.heatmap div:hover::after {
+  content: attr(data-note);
+  position:absolute;
+  background: rgba(0,0,0,0.7);
+  padding:5px 8px; border-radius:6px;
+  font-size:0.75rem; top:-30px; left:-10px;
+  white-space:nowrap; pointer-events:none;
+}
+
+/* ===== TIMELINE ===== */
+.timeline { display:flex; flex-direction:column; gap:10px; margin-top:10px; }
+.timeline-item {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 14px; border-radius:12px;
+  background: rgba(255,255,255,0.05);
+  border-left:5px solid #f0c674;
+  transition: all 0.3s ease;
+}
+.timeline-item[data-mood="happy"]{ border-left-color:#a18e5d; }
+.timeline-item[data-mood="sad"]{ border-left-color:#5d7aa2; }
+.timeline-item[data-mood="angry"]{ border-left-color:#a25d5d; }
+.timeline-item[data-mood="surprised"]{ border-left-color:#8b5da2; }
+.timeline-item[data-mood="neutral"]{ border-left-color:#7a7a7a; }
+.timeline-item:hover{ transform: scale(1.02); box-shadow:0 0 15px rgba(255,255,255,0.1); }
+
+/* ===== FLOATING EMOJIS ===== */
+.emoji {
+  position:absolute; font-size:2rem; pointer-events:none;
+  opacity:0.9; animation:floatPath 8s ease-in-out infinite;
+}
+@keyframes floatPath{
+  0% { transform: translate(0,0) rotate(0deg); }
+  50% { transform: translate(30px,-60px) rotate(180deg); }
+  100% { transform: translate(0,0) rotate(360deg); }
+}
+</style>
+</head>
+<body>
+
+<!-- FLOATING EMOJIS -->
+<div class="emoji" style="top:15%; left:20%;">😊</div>
+<div class="emoji" style="top:60%; left:75%;">😢</div>
+<div class="emoji" style="top:40%; left:50%;">😡</div>
+
+<div class="container">
+  <div class="dashboard-header">
+    <h1>Mood History Dashboard</h1>
+    <div class="filters">
+      <select id="moodFilter">
+        <option value="all">All Moods</option>
+        <option value="happy">Happy</option>
+        <option value="sad">Sad</option>
+        <option value="angry">Angry</option>
+        <option value="surprised">Surprised</option>
+        <option value="neutral">Neutral</option>
+      </select>
+      <input type="date" id="dateFilter"/>
+    </div>
+  </div>
+
+  <div class="analytics-section">
+    <!-- LEFT: Mood Ring + Pie -->
+    <div>
+      <div class="mood-ring-container"><span>Mood Ring</span></div>
+      <div class="analytics-card chart-container">
+        <canvas id="pieChart"></canvas>
+      </div>
+    </div>
+
+    <!-- RIGHT: Heatmap + Timeline -->
+    <div class="analytics-cards">
+      <div class="analytics-card heatmap-container">
+        <div class="heatmap" id="heatmap"></div>
+      </div>
+      <div class="analytics-card">
+        <div class="timeline" id="timeline"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DUMMY DATA =====
+const dummyHistory=[
+  {date:'2025-11-01', mood:'happy', note:'Felt great after morning jog'},
+  {date:'2025-11-02', mood:'sad', note:'Missed breakfast, low energy'},
+  {date:'2025-11-03', mood:'angry', note:'Traffic jam in evening'},
+  {date:'2025-11-04', mood:'surprised', note:'Unexpected gift from friend'},
+  {date:'2025-11-05', mood:'neutral', note:'Regular day at work'},
+  {date:'2025-11-06', mood:'happy', note:'Had coffee with friends'},
+  {date:'2025-11-07', mood:'angry', note:'Missed train'},
+];
+
+// ===== ELEMENTS =====
+const timelineEl = document.getElementById('timeline');
+const heatmapEl = document.getElementById('heatmap');
+const moodFilter = document.getElementById('moodFilter');
+const dateFilter = document.getElementById('dateFilter');
+
+// ===== PIE CHART =====
+const ctx = document.getElementById('pieChart').getContext('2d');
+const pieChart = new Chart(ctx,{
+  type:'doughnut',
+  data:{
+    labels:['Happy','Sad','Angry','Surprised','Neutral'],
+    datasets:[{
+      data:[0,0,0,0,0],
+      backgroundColor:['#a18e5d','#5d7aa2','#a25d5d','#8b5da2','#7a7a7a'],
+      borderWidth:0
+    }]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{position:'bottom'}},
+    animation:{animateScale:true, animateRotate:true}
+  }
+});
+
+// ===== RENDER FUNCTIONS =====
+function renderTimeline(data){
+  timelineEl.innerHTML='';
+  data.forEach(entry=>{
+    const div=document.createElement('div');
+    div.className='timeline-item';
+    div.dataset.mood = entry.mood;
+    div.innerHTML = `<span>${entry.date}</span> – ${entry.note}`;
+    timelineEl.appendChild(div);
+  });
+}
+
+function renderHeatmap(data){
+  heatmapEl.innerHTML='';
+  data.forEach(entry=>{
+    const div=document.createElement('div');
+    div.dataset.mood = entry.mood;
+    div.dataset.note = `${entry.date}: ${entry.note}`;
+    heatmapEl.appendChild(div);
+  });
+}
+
+function renderPieChart(data){
+  const counts = {happy:0, sad:0, angry:0, surprised:0, neutral:0};
+  data.forEach(d=>counts[d.mood]++);
+  pieChart.data.datasets[0].data = [counts.happy, counts.sad, counts.angry, counts.surprised, counts.neutral];
+  pieChart.update();
+}
+
+// ===== BACKGROUND COLORS =====
+const moodBackgrounds = {
+  happy:'#1c1c28,#3a352b',
+  sad:'#1c1c28,#2b3a4a',
+  angry:'#1c1c28,#4a2b2b',
+  surprised:'#1c1c28,#4a2b4a',
+  neutral:'#1c1c28,#3a3a3a'
+};
+
+// ===== APPLY FILTERS =====
+function applyFilters(){
+  let filtered = [...dummyHistory];
+  const moodVal = moodFilter.value;
+  const dateVal = dateFilter.value;
+
+  if(moodVal !== 'all'){
+    filtered = filtered.filter(d=>d.mood===moodVal);
+    updateBackground(moodVal);
+  } else {
+    // dominant mood for 'all'
+    const counts = {happy:0, sad:0, angry:0, surprised:0, neutral:0};
+    filtered.forEach(d=>counts[d.mood]++);
+    const dominant = Object.keys(counts).reduce((a,b)=>counts[a]>counts[b]?a:b);
+    updateBackground(dominant);
+  }
+
+  if(dateVal){
+    filtered = filtered.filter(d=>d.date===dateVal);
+  }
+
+  renderTimeline(filtered);
+  renderHeatmap(filtered);
+  renderPieChart(filtered);
+}
+
+// ===== UPDATE BACKGROUND =====
+function updateBackground(mood){
+  const colors = moodBackgrounds[mood];
+  document.body.style.background = `linear-gradient(135deg, ${colors})`;
+}
+
+// Event listeners
+moodFilter.addEventListener('change', applyFilters);
+dateFilter.addEventListener('change', applyFilters);
+
+// Initial render
+applyFilters();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MoodLens – AI Mood Detection</title>
+   <style>
+    /* -------------------------------------------------------
+    GLOBAL SETTINGS
+---------------------------------------------------------*/
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #050009;
+    color: white;
+    overflow-x: hidden;
+}
+
+h1, h2, h3 {
+    font-weight: 600;
+}
+
+a {
+    text-decoration: none;
+}
+
+/* Fade-in animation */
+.fade {
+    opacity: 0;
+    animation: fadeIn 1.2s ease forwards;
+}
+
+@keyframes fadeIn {
+    to { opacity: 1; }
+}
+
+/* -------------------------------------------------------
+    NAVBAR
+---------------------------------------------------------*/
+.header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    padding: 20px 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+    background: rgba(10, 0, 20, 0.6);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.logo {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.logo span {
+    color: #a855f7;
+}
+
+.header nav a {
+    margin-left: 30px;
+    color: #eee;
+    transition: 0.3s;
+}
+
+.header nav a:hover {
+    color: #c084fc;
+    text-shadow: 0 0 10px #c084fc;
+}
+
+.btn {
+    padding: 10px 20px;
+    background: #a855f7;
+    color: white !important;
+    border-radius: 8px;
+    transition: 0.3s ease;
+}
+
+.btn:hover {
+    background: #9333ea;
+    box-shadow: 0 0 15px #a855f7;
+}
+
+/* -------------------------------------------------------
+    HERO SECTION
+---------------------------------------------------------*/
+.hero {
+    padding-top: 140px;
+    text-align: center;
+    background: linear-gradient(135deg, #1a002e, #080010, #26002f);
+    padding-bottom: 120px;
+}
+
+.big-title {
+    font-size: 70px;
+    font-weight: 700;
+    background: linear-gradient(to right, #a855f7, #9333ea, #d946ef);
+    -webkit-background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 30px rgba(168, 85, 247, 0.5);
+    animation: glow-text 2s infinite alternate;
+}
+
+@keyframes glow-text {
+    from { text-shadow: 0 0 20px #a855f7; }
+    to   { text-shadow: 0 0 40px #d946ef; }
+}
+
+.hero-sub {
+    max-width: 800px;
+    margin: 20px auto;
+    font-size: 20px;
+    opacity: 0.9;
+    line-height: 1.7;
+}
+
+.start-btn {
+    display: inline-block;
+    margin-top: 30px;
+    padding: 18px 40px;
+    background: linear-gradient(135deg, #9333ea, #d946ef);
+    color: white;
+    border-radius: 40px;
+    font-size: 20px;
+    letter-spacing: 1px;
+    box-shadow: 0 0 20px #9333ea;
+    transition: 0.3s ease;
+    animation: pulse 2s infinite;
+}
+
+.start-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 0 40px #d946ef;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 20px #9333ea; }
+    50% { box-shadow: 0 0 40px #d946ef; }
+    100% { box-shadow: 0 0 20px #9333ea; }
+}
+
+.hero-img {
+    margin-top: 40px;
+    width: 90%;
+    max-width: 900px;
+    height: 320px;
+    background: url('https://images.unsplash.com/photo-1517694712202-14dd9538aa97') center/cover;
+    border-radius: 25px;
+    filter: drop-shadow(0 0 20px #8b5cf6);
+    animation: float 5s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%,100% { transform: translateY(0); }
+    50%     { transform: translateY(-14px); }
+}
+
+/* -------------------------------------------------------
+    PROBLEM SECTION
+---------------------------------------------------------*/
+.problem {
+    padding: 120px 10%;
+    text-align: center;
+    background: #0c0013;
+}
+
+.problem h2 {
+    font-size: 45px;
+    margin-bottom: 25px;
+}
+
+.problem p {
+    font-size: 20px;
+    opacity: 0.85;
+    margin-bottom: 25px;
+}
+
+.highlight {
+    background: rgba(255, 0, 255, 0.12);
+    border: 1px solid rgba(255, 0, 255, 0.1);
+    padding: 18px;
+    border-radius: 12px;
+    display: inline-block;
+    margin-top: 20px;
+    color: #e879f9;
+}
+
+/* -------------------------------------------------------
+    FEATURES SECTION
+---------------------------------------------------------*/
+.features {
+    padding: 120px 10%;
+    background: #15001f;
+    text-align: center;
+}
+
+.features h2 {
+    font-size: 45px;
+    margin-bottom: 40px;
+}
+
+.feature-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 35px;
+}
+
+.f-card {
+    background: rgba(255,255,255,0.06);
+    padding: 30px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(6px);
+    transition: 0.3s ease;
+}
+
+.f-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 0 20px #9333ea;
+}
+
+/* -------------------------------------------------------
+    HOW IT WORKS
+---------------------------------------------------------*/
+.how {
+    padding: 120px 10%;
+    background: #0a0011;
+    text-align: center;
+}
+
+.steps {
+    margin-top: 40px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 40px;
+}
+
+.step {
+    background: rgba(255,255,255,0.06);
+    padding: 25px;
+    border-radius: 15px;
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: 0.3s;
+}
+
+.step:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 0 20px #a855f7;
+}
+
+/* -------------------------------------------------------
+    BENEFITS
+---------------------------------------------------------*/
+.benefits {
+    background: #0f0018;
+    padding: 120px 10%;
+    text-align: center;
+}
+
+.benefit-list {
+    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    font-size: 20px;
+    opacity: 0.85;
+}
+
+.benefit {
+    background: rgba(255,255,255,0.06);
+    border-left: 4px solid #a855f7;
+    padding: 15px 20px;
+    border-radius: 10px;
+}
+
+/* -------------------------------------------------------
+    ABOUT SECTION
+---------------------------------------------------------*/
+.about {
+    padding: 120px 10%;
+    background: #180023;
+    text-align: center;
+    line-height: 1.8;
+}
+
+.about h2 {
+    font-size: 45px;
+    margin-bottom: 30px;
+}
+
+.about p {
+    font-size: 20px;
+    opacity: 0.85;
+    margin-bottom: 20px;
+}
+
+/* -------------------------------------------------------
+    CTA SECTION
+---------------------------------------------------------*/
+.cta {
+    padding: 140px 10%;
+    background: linear-gradient(135deg, #33004b, #15001f);
+    text-align: center;
+}
+
+.cta h1 {
+    font-size: 55px;
+    margin-bottom: 35px;
+}
+
+.start-btn.big {
+    padding: 20px 50px;
+    font-size: 24px;
+}
+
+/* -------------------------------------------------------
+    FOOTER
+---------------------------------------------------------*/
+footer {
+    padding: 30px;
+    text-align: center;
+    background: #09000f;
+    color: #aaa;
+    font-size: 14px;
+}
+
+   </style>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<header class="header">
+    <div class="logo">MoodLens</div>
+    <nav>
+        <a href="#features">Features</a>
+        <a href="#how">How It Works</a>
+        <a href="#benefits">Benefits</a>
+        <a href="#about">About</a>
+        <a href="login.html" class="btn">Login</a>
+    </nav>
+</header>
+
+<!-- HERO SECTION -->
+<section class="hero">
+    <h1 class="big-title">Understand Emotions With AI</h1>
+    <p class="hero-sub">
+        MoodLens uses advanced face-expression AI to detect your emotions in real time
+        and help you improve your mental well-being, productivity, and self-awareness.
+    </p>
+
+    <a href="login.html" class="start-btn">Start Your Emotional Journey →</a>
+
+    
+</section>
+
+<!-- SECTION: PROBLEM STATEMENT -->
+<section class="problem">
+    <h2>Why MoodLens?</h2>
+    <p>
+        70% people struggle to track their emotional health. Traditional apps require 
+        the user to type their feelings manually — which most people avoid.
+    </p>
+
+    <p class="highlight">
+        MoodLens solves this using **AI-powered automatic mood detection**,  
+        so users don’t need to do anything — simply look at the camera.
+    </p>
+</section>
+
+<!-- FEATURES SECTION -->
+<section id="features" class="features">
+    <h2>Powerful Features</h2>
+
+    <div class="feature-cards">
+
+        <div class="f-card">
+            <h3>🎭 Real-Time Mood Detection</h3>
+            <p>
+                Uses deep learning to analyze your face and detect emotions such as:
+                Happy, Sad, Angry, Fear, Surprise, Neutral & more.
+            </p>
+        </div>
+
+        <div class="f-card">
+            <h3>📊 Mood Tracking Dashboard</h3>
+            <p>
+                Track emotional changes over hours, days, and weeks through beautiful charts.
+            </p>
+        </div>
+
+        <div class="f-card">
+            <h3>🎵 Personalized Music Suggestions</h3>
+            <p>
+                Your current mood is matched with curated music playlists.
+            </p>
+        </div>
+
+        <div class="f-card">
+            <h3>✨ Interactive UI</h3>
+            <p>
+                A clean, animated design built to impress judges, investors, and users.
+            </p>
+        </div>
+
+        <div class="f-card">
+            <h3>🔥 Mood History Timeline</h3>
+            <p>
+                See how your emotions fluctuate daily with timestamped logs.
+            </p>
+        </div>
+
+        <div class="f-card">
+            <h3>🔒 Secure with Firebase</h3>
+            <p>
+                Login + signup authentication and encrypted cloud data storage.
+            </p>
+        </div>
+
+    </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how" class="how">
+    <h2>How MoodLens Works</h2>
+
+    <div class="steps">
+
+        <div class="step">
+            <h3>1️⃣ Login or Sign Up</h3>
+            <p>
+                Create an account to store your emotional data securely.
+            </p>
+        </div>
+
+        <div class="step">
+            <h3>2️⃣ Allow Camera Access</h3>
+            <p>
+                Your webcam helps the AI detect facial expressions in real time.
+            </p>
+        </div>
+
+        <div class="step">
+            <h3>3️⃣ AI Analyzes Your Emotions</h3>
+            <p>
+                Our trained TensorFlow model identifies your mood instantly.
+            </p>
+        </div>
+
+        <div class="step">
+            <h3>4️⃣ Get Insights & Suggestions</h3>
+            <p>
+                Receive mood-based recommendations including playlists, activities, and wellness tips.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- BENEFITS SECTION -->
+<section id="benefits" class="benefits">
+    <h2>The Impact of MoodLens</h2>
+
+    <div class="benefit-list">
+        <div class="benefit">
+            ✔ Enhances emotional self-awareness  
+        </div>
+        <div class="benefit">
+            ✔ Helps track mental health trends  
+        </div>
+        <div class="benefit">
+            ✔ Boosts productivity & focus  
+        </div>
+        <div class="benefit">
+            ✔ Supports therapy & mood monitoring  
+        </div>
+        <div class="benefit">
+            ✔ Perfect for corporate wellness programs  
+        </div>
+        <div class="benefit">
+            ✔ Useful for students, professionals & creators  
+        </div>
+    </div>
+</section>
+
+<!-- ABOUT SECTION -->
+<section id="about" class="about">
+    <h2>The Vision Behind MoodLens</h2>
+
+    <p>
+        MoodLens was created to bridge the gap between technology and emotional health.
+        With rising stress levels around the world, there is a need for tools that help humans
+        understand themselves better.
+    </p>
+
+    <p>
+        Our mission is simple:
+    </p>
+
+    <p class="highlight">
+        “Make emotional intelligence accessible through AI.”
+    </p>
+
+    <p>
+        This project uses cutting-edge machine learning techniques, TensorFlow.js models,
+        Firebase authentication, and a beautifully designed interface to create a product
+        that feels alive, personal, and caring.
+    </p>
+
+    <p>
+        Whether you are presenting this to judges, investors, or end users,
+        MoodLens showcases how AI can transform the way we understand emotions.
+    </p>
+</section>
+
+<!-- CALL TO ACTION -->
+<section class="cta">
+    <h1>Ready to Discover Your Emotions?</h1>
+    <a href="login.html" class="start-btn big">Start Now</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <p>© 2025 MoodLens — AI Emotion Intelligence</p>
+</footer>
+
+</body>
+</html>
